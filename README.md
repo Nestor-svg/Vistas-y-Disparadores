@@ -1,5 +1,4 @@
 # Vistas-y-Disparadores
-# Vistas-y-Disparadores
 
 ## Consultas
 ### Obtenga las ventas totales por categoría de películas ordenadas descendentemente.
