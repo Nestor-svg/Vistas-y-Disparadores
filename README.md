@@ -1,6 +1,12 @@
 # Vistas-y-Disparadores
 
-# Consultas
+## Realice la restauración de la base de datos alquilerdvd.tar. Observe que la base de datos no tiene un formato SQL como el empleado en actividades anteriores.
+```
+createdb alquilerdvd
+pg_restore -d alquilerdvd -U usuario -h localhost -p 5432 AlquilerPractica.tar
+```
+
+## Consultas
 ### 1. Obtenga las ventas totales por categoría de películas ordenadas descendentemente.
 
 ```
@@ -120,7 +126,7 @@ categories | Action : Classics : Documentary : Drama : Foreign : Music : New : S
 films      | Alone Trip : Army Flintstones : Artist Coldblooded : Boondock Ballroom : Caddyshack Jedi : Cowboy Doom : Eve Resurrection : Forrest Sons : French Holiday : Frost Head : Halloween Nuts : Hunter Alter : Image Princess : Jeepers Wedding : Luck Opus : Necklace Outbreak : Platoon Instinct : Spice Sorority : Wedding Apollo : Weekend Personal : Whale Bikini : Young Language
 ```
 
-# Vistas
+## Vistas
 ### 1. Vista primera consulta
 
 ```
@@ -249,8 +255,8 @@ categories | Action : Classics : Documentary : Drama : Foreign : Music : New : S
 films      | Alone Trip : Army Flintstones : Artist Coldblooded : Boondock Ballroom : Caddyshack Jedi : Cowboy Doom : Eve Resurrection : Forrest Sons : French Holiday : Frost Head : Halloween Nuts : Hunter Alter : Image Princess : Jeepers Wedding : Luck Opus : Necklace Outbreak : Platoon Instinct : Spice Sorority : Wedding Apollo : Weekend Personal : Whale Bikini : Young Language
 ```
 
-# Restricciones CHECK
-## 1. Restricción CHECK para evitar nombres vacíos o solo espacios en la tabla actor.
+## Restricciones CHECK
+### 1. Restricción CHECK para evitar nombres vacíos o solo espacios en la tabla actor.
 
 ```
 alquilerdvd=> ALTER TABLE actor 
@@ -261,7 +267,7 @@ ADD CONSTRAINT check_last_name_not_empty CHECK (TRIM(last_name) <> '');
 ALTER TABLE
 ```
 
-## 2. Restricción CHECK para garantizar que city_id sea válido en la tabla address.
+### 2. Restricción CHECK para garantizar que city_id sea válido en la tabla address.
 
 ```
 alquilerdvd=> ALTER TABLE address
@@ -269,7 +275,7 @@ alquilerdvd-> ADD CONSTRAINT fk_city_id FOREIGN KEY (city_id) REFERENCES city(ci
 ALTER TABLE
 ```
 
-## 3. Restricción CHECK para garantizar unicidad en la tabla country.
+### 3. Restricción CHECK para garantizar unicidad en la tabla country.
 
 ```
 alquilerdvd=> ALTER TABLE country
@@ -277,7 +283,7 @@ alquilerdvd-> ADD CONSTRAINT unique_country_name UNIQUE (country);
 ALTER TABLE
 ```
 
-## 4. Restricción CHECK para validar el formato de release_year en la tabla film.
+### 4. Restricción CHECK para validar el formato de release_year en la tabla film.
 
 ```
 alquilerdvd=> ALTER TABLE film
@@ -285,7 +291,7 @@ alquilerdvd-> ADD CONSTRAINT check_release_year_valid CHECK (release_year BETWEE
 ALTER TABLE
 ```
 
-## 5. Restricción CHECK para garantizar que amount no sea negativo en la tabla payment.
+### 5. Restricción CHECK para garantizar que amount no sea negativo en la tabla payment.
 
 ```
 alquilerdvd=> ALTER TABLE payment
@@ -293,14 +299,14 @@ ADD CONSTRAINT check_amount_positive CHECK (amount >= 0);
 ALTER TABLE
 ```
 
-## 6. Restricción CHECK para garantizar que active solo contenga valores booleanos en la tabla staff.
+### 6. Restricción CHECK para garantizar que active solo contenga valores booleanos en la tabla staff.
 
 ```
 alquilerdvd=> ALTER TABLE staff
 alquilerdvd-> ADD CONSTRAINT check_active_boolean CHECK (active IN (true, false));
 ALTER TABLE
 ```
-## 7. Restricción CHECK para garantizar que last_update no sea futura en la tabla store.
+### 7. Restricción CHECK para garantizar que last_update no sea futura en la tabla store.
 
 ```
 alquilerdvd=> ALTER TABLE store
@@ -308,13 +314,75 @@ alquilerdvd-> ADD CONSTRAINT check_last_update_past CHECK (last_update <= CURREN
 ALTER TABLE
 ```
 
-# Explicación de la sentencia
+## Explicación de la sentencia
+
 ```
 last_updated BEFORE UPDATE ON customer 
 FOR EACH ROW EXECUTE PROCEDURE last_updated();
 ```
+
 Explicación:
 - Disparador (Trigger): Es un mecanismo en PostgreSQL que ejecuta una función automáticamente al ocurrir un evento en una tabla (como INSERT, UPDATE o DELETE).
 - En este caso:
     - El disparador se activa antes de que se actualice un registro en la tabla customer.
     - Llama a la función last_updated(), que probablemente actualiza el campo last_updated con la fecha y hora actuales, para registrar cuándo se modificó la fila.
+
+## Construya un disparador que guarde en una nueva tabla creada por usted la fecha de cuando se insertó un nuevo registro en la tabla film. 
+
+```
+alquilerdvd=> SELECT * FROM film;
+alquilerdvd=> CREATE TABLE film_insert_log (
+alquilerdvd(> film_id INT,
+alquilerdvd(> insert_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP);
+CREATE TABLE
+
+alquilerdvd=> CREATE OR REPLACE FUNCTION log_film_insert() 
+alquilerdvd-> RETURNS TRIGGER AS $$
+alquilerdvd$> BEGIN
+alquilerdvd$>     INSERT INTO film_insert_log(film_id, insert_date)
+alquilerdvd$>     VALUES (NEW.film_id, CURRENT_TIMESTAMP);
+alquilerdvd$>     RETURN NEW;
+alquilerdvd$> END;
+alquilerdvd$> $$ LANGUAGE plpgsql;
+CREATE FUNCTION
+
+alquilerdvd=> CREATE TRIGGER trigger_film_insert
+alquilerdvd-> AFTER INSERT ON film
+alquilerdvd-> FOR EACH ROW
+alquilerdvd-> EXECUTE FUNCTION log_film_insert();
+CREATE TRIGGER
+```
+
+## Construya un disparador que guarde en una nueva tabla creada por usted la fecha de cuando se eliminó un registro en la tabla film y el identificador del film. 
+
+```
+alquilerdvd=> CREATE TABLE film_delee_log (
+alquilerdvd(> film_id INT,
+alquilerdvd(> delete_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP);
+CREATE TABLE
+
+alquilerdvd=> CREATE OR REPLACE FUNCTION log_film_delete() 
+alquilerdvd-> RETURNS TRIGGER AS $$
+alquilerdvd$> BEGIN
+alquilerdvd$>     INSERT INTO film_delete_log(film_id, delete_date)
+alquilerdvd$>     VALUES (OLD.film_id, CURRENT_TIMESTAMP);
+alquilerdvd$>     RETURN OLD;
+alquilerdvd$> END;
+alquilerdvd$> $$ LANGUAGE plpgsql;
+CREATE FUNCTION
+
+alquilerdvd=> CREATE TRIGGER trigger_film_delete
+alquilerdvd-> AFTER DELETE ON film
+alquilerdvd-> FOR EACH ROW
+alquilerdvd-> EXECUTE FUNCTION log_film_delete();
+CREATE TRIGGER
+```
+
+## Significado y relevancia de las secuencias
+
+- Las secuencias en PostgreSQL son objetos que generan números de manera secuencial. Son esenciales para gestionar valores únicos y auto-incrementales, como identificadores en las tablas, garantizando que no se repitan.
+
+- Relevancia de las secuencias:
+    - Generación automática de identificadores: Son muy útiles para crear valores únicos para columnas de tipo serial o bigserial sin necesidad de intervención manual.
+    - Integridad de datos: Aseguran que los identificadores sean únicos y consecutivos, evitando colisiones o duplicados.
+    - Optimización de rendimiento: Mejoran la eficiencia al gestionar automáticamente la asignación de valores en operaciones de inserción masiva, eliminando la sobrecarga de manejar los identificadores por separado.
