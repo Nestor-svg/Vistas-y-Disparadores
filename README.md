@@ -1,7 +1,8 @@
 # Vistas-y-Disparadores
 # Vistas-y-Disparadores
 
-## Obtenga las ventas totales por categoría de películas ordenadas descendentemente.
+## Consultas
+### Obtenga las ventas totales por categoría de películas ordenadas descendentemente.
 
 ```
 alquilerdvd=> SELECT category_id, COUNT(*) AS Total_peliculas
@@ -29,7 +30,7 @@ ORDER BY Total_peliculas DESC;
 (16 rows)
 ```
 
-## Obtenga las ventas totales por tienda, donde se refleje la ciudad, el país (concatenar la ciudad y el país empleando como separador la “,”), y el encargado. Pudiera emplear GROUP BY, ORDER BY
+### Obtenga las ventas totales por tienda, donde se refleje la ciudad, el país (concatenar la ciudad y el país empleando como separador la “,”), y el encargado. Pudiera emplear GROUP BY, ORDER BY
 ```
 alquilerdvd=> SELECT CONCAT(c.city, ', ', co.country) AS ciudad_pais, s.store_id, CONCAT(st.first_name, ' ', st.last_name) AS encargado, SUM(p.amount) AS ventas_totales
 FROM store s
@@ -48,8 +49,8 @@ ORDER BY ventas_totales DESC;
 
 ```
 
-## Obtenga una lista de películas, donde se reflejen el identificador, el título, descripción, categoría, el precio, la duración de la película, clasificación, nombre y apellidos de los actores (puede realizar una concatenación de ambos). Pudiera emplear GROUP BY
-### Seleccionamos las 3 primeras películas para simplificar la salida.
+### Obtenga una lista de películas, donde se reflejen el identificador, el título, descripción, categoría, el precio, la duración de la película, clasificación, nombre y apellidos de los actores (puede realizar una concatenación de ambos). Pudiera emplear GROUP BY
+#### Seleccionamos las 3 primeras películas para simplificar la salida.
 ```
 alquilerdvd=> SELECT f.film_id, f.title, f.description, fc.category_id, f.rental_rate, f.length, f.rating, STRING_AGG(CONCAT(a.first_name, ' ', a.last_name), ', ') AS actors
 FROM film f
@@ -87,8 +88,8 @@ actors      | Nick Wahlberg, Bob Fawcett, Cameron Streep, Ray Johansson, Juliann
 
 ```
 
-## Obtenga la información de los actores, donde se incluya sus nombres y apellidos, las categorías y sus películas. Los actores deben de estar agrupados y, las categorías y las películas deben estar concatenados por “:” 
-### Seleccionamos los 3 primeros actores para simplificar la salida.
+### Obtenga la información de los actores, donde se incluya sus nombres y apellidos, las categorías y sus películas. Los actores deben de estar agrupados y, las categorías y las películas deben estar concatenados por “:” 
+#### Seleccionamos los 3 primeros actores para simplificar la salida.
 ```
 alquilerdvd=> SELECT 
     a.actor_id,
